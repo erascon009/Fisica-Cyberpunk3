@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Física // Cyberpunk</title>
+<style>
+*{box-sizing:border-box}
+:root{
+ --bg:#05060d;--panel:#0b1020;--cyan:#00f6ff;--pink:#ff2bd6;
+ --green:#39ff88;--red:#ff3b5c;--text:#e8f7ff;--muted:#91a8b8;
+}
+body{
+ margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;
+ color:var(--text);background:
+ radial-gradient(circle at 15% 10%,#102650 0,transparent 30%),
+ radial-gradient(circle at 85% 85%,#3a0c35 0,transparent 30%),
+ #05060d;overflow-x:hidden;
+}
+body:before{
+ content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;
+ background-image:linear-gradient(#00f6ff18 1px,transparent 1px),
+ linear-gradient(90deg,#00f6ff18 1px,transparent 1px);
+ background-size:42px 42px;
+}
+.container{
+ position:relative;width:min(1150px,95%);margin:25px auto;padding:26px;
+ background:#080b16eF;border:1px solid #00f6ff66;
+ box-shadow:0 0 35px #00f6ff18,0 0 80px #ff2bd610;
+ clip-path:polygon(0 14px,14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px));
+}
+header{text-align:center;margin-bottom:25px}
+.kicker{
+ color:var(--pink);font-size:12px;letter-spacing:4px;font-weight:bold;
+ text-shadow:0 0 10px var(--pink);
+}
+h1{
+ margin:7px 0;color:var(--cyan);font-size:clamp(28px,5vw,48px);
+ letter-spacing:3px;text-transform:uppercase;
+ text-shadow:0 0 8px var(--cyan),0 0 28px #00f6ff77;
+}
+.subtitle{color:var(--muted);margin:0;font-size:14px}
+.game{
+ position:relative;display:grid;grid-template-columns:1fr 1fr;
+ gap:70px;min-height:640px;padding:8px 3px;
+}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.column{display:flex;flex-direction:column;gap:11px;z-index:4}
+.column-title{
+ padding:10px 14px;border:1px solid #00f6ff66;background:#00f6ff0b;
+ color:var(--cyan);font-weight:bold;letter-spacing:2px;text-align:center;
+ text-transform:uppercase;box-shadow:inset 0 0 15px #00f6ff09;
+}
+.column:nth-child(3) .column-title{color:var(--pink);border-color:#ff2bd666}
+.item{
+ min-height:52px;padding:12px 14px;display:flex;align-items:center;
+ border:1px solid #31465a;background:linear-gradient(90deg,#0c1423,#080d18);
+ color:#dff8ff;cursor:pointer;transition:.18s;line-height:1.35;
+ clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));
+}
+.item:hover{
+ transform:translateX(3px);border-color:var(--cyan);
+ box-shadow:0 0 14px #00f6ff30;
+}
+.item.selected{border-color:var(--cyan);background:#00f6ff14;box-shadow:0 0 18px #00f6ff45}
+.item.correct{border-color:var(--green);background:#39ff8815;box-shadow:0 0 15px #39ff8840}
+.item.incorrect{border-color:var(--red);background:#ff3b5c15;box-shadow:0 0 15px #ff3b5c40}
+.controls{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:15px}
+button{
+ padding:12px 24px;border:1px solid var(--cyan);background:#00f6ff12;
+ color:var(--cyan);font-weight:bold;letter-spacing:1px;cursor:pointer;
+ clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+button:hover{background:#00f6ff25;box-shadow:0 0 18px #00f6ff45}
+#reset{border-color:var(--pink);color:var(--pink);background:#ff2bd610}
+#result{text-align:center;min-height:26px;margin-top:18px;font-weight:bold;color:var(--green);text-shadow:0 0 10px #39ff8866}
+.decor{
+ position:absolute;pointer-events:none;font-size:22px;opacity:.6;
+ text-shadow:0 0 12px currentColor;
+}
+.d1{top:22px;left:24px;color:var(--cyan)}
+.d2{top:22px;right:24px;color:var(--pink)}
+.d3{bottom:20px;left:25px;color:var(--green)}
+.d4{bottom:20px;right:25px;color:var(--cyan)}
+@media(max-width:700px){
+ .container{padding:17px;margin:12px auto}
+ .game{gap:12px;min-height:780px}
+ .item{font-size:12px;padding:10px}
+ .column-title{font-size:13px}
+}
+
+/* PANTALLA DE INICIO */
+#startScreen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 40%,#102650 0,transparent 35%),radial-gradient(circle at 15% 85%,#3a0c35 0,transparent 30%),#05060d}
+#startScreen:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;background-image:linear-gradient(#00f6ff18 1px,transparent 1px),linear-gradient(90deg,#00f6ff18 1px,transparent 1px);background-size:42px 42px}
+.start-box{position:relative;width:min(620px,92vw);padding:42px 28px;text-align:center;background:#080b16f2;border:1px solid #00f6ff88;box-shadow:0 0 30px #00f6ff25,0 0 90px #ff2bd618;clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px))}
+.start-icon{font-size:58px;color:var(--cyan);text-shadow:0 0 12px var(--cyan),0 0 30px #00f6ff88;margin-bottom:10px}
+.start-kicker{color:var(--pink);font-size:12px;font-weight:bold;letter-spacing:4px;text-shadow:0 0 10px var(--pink)}
+.start-title{margin:10px 0;color:var(--cyan);font-size:clamp(30px,7vw,54px);letter-spacing:3px;text-transform:uppercase;text-shadow:0 0 8px var(--cyan),0 0 28px #00f6ff77}
+.start-question{margin:15px 0 28px;color:var(--text);font-size:clamp(18px,4vw,24px)}
+.start-buttons{display:flex;justify-content:center;gap:15px;flex-wrap:wrap}
+.start-buttons button{min-width:145px;font-size:15px}
+#startYes{border-color:var(--green);color:var(--green);background:#39ff8812}
+#startYes:hover{background:#39ff8825;box-shadow:0 0 20px #39ff8860}
+#startNo{border-color:var(--pink);color:var(--pink);background:#ff2bd610}
+#startNo:hover{background:#ff2bd625;box-shadow:0 0 20px #ff2bd650}
+#startScreen.hidden{animation:startFade .45s ease forwards;pointer-events:none}
+@keyframes startFade{to{opacity:0;visibility:hidden;transform:scale(1.03)}}
+
+</style>
+</head>
+<body>
+
+<div id="startScreen">
+  <div class="start-box">
+    <div class="start-icon">⚛</div>
+    <div class="start-kicker">PHYSICS // TRAINING MODULE 01</div>
+    <div class="start-title">FÍSICA CYBERPUNK</div>
+    <div class="start-question">¿Quieres iniciar el juego?</div>
+    <div class="start-buttons">
+      <button id="startYes">[ SÍ, INICIAR ]</button>
+      <button id="startNo">[ TODAVÍA NO ]</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+<span class="decor d1">⚡</span><span class="decor d2">◈</span>
+<span class="decor d3">⌁</span><span class="decor d4">⚛</span>
+<header>
+ <div class="kicker">PHYSICS // TRAINING MODULE 01</div>
+ <h1>Relaciona las columnas</h1>
+ <p class="subtitle">Selecciona un concepto y conéctalo con su definición.</p>
+</header>
+
+<div class="game" id="game">
+<canvas id="canvas"></canvas>
+
+<div class="column" id="leftColumn">
+ <div class="column-title">◈ Columna A // Conceptos</div>
+ <div class="item" data-id="1">1. Densidad</div>
+ <div class="item" data-id="2">2. Presión hidrostática</div>
+ <div class="item" data-id="3">3. Principio de Arquímedes</div>
+ <div class="item" data-id="4">4. Caudal</div>
+ <div class="item" data-id="5">5. Ecuación de continuidad</div>
+ <div class="item" data-id="6">6. Frecuencia</div>
+ <div class="item" data-id="7">7. Longitud de onda</div>
+ <div class="item" data-id="8">8. Ley de Hooke</div>
+ <div class="item" data-id="9">9. Ley de Coulomb</div>
+ <div class="item" data-id="10">10. Efecto Doppler</div>
+</div>
+
+<div class="column" id="rightColumn">
+ <div class="column-title">◈ Columna B // Definiciones</div>
+ <div class="item" data-answer="8">A. F = kx</div>
+ <div class="item" data-answer="6">B. Número de oscilaciones que ocurren por segundo. Se mide en Hz.</div>
+ <div class="item" data-answer="10">C. Cambio aparente de la frecuencia percibida debido al movimiento de la fuente o del observador.</div>
+ <div class="item" data-answer="1">D. ρ = m/V</div>
+ <div class="item" data-answer="4">E. Q = Av, donde Q es el caudal, A el área y v la velocidad.</div>
+ <div class="item" data-answer="3">F. Fuerza de flotación igual al peso del fluido desplazado.</div>
+ <div class="item" data-answer="2">G. P = ρgh, depende de la densidad, gravedad y profundidad.</div>
+ <div class="item" data-answer="9">H. F = k|q₁q₂|/r²</div>
+ <div class="item" data-answer="7">I. Distancia entre dos puntos equivalentes consecutivos de una onda, como cresta a cresta.</div>
+ <div class="item" data-answer="5">J. A₁v₁ = A₂v₂; cuando disminuye el área de una tubería, aumenta la velocidad del fluido.</div>
+</div>
+</div>
+
+<div class="controls">
+ <button id="check">[ EJECUTAR COMPROBACIÓN ]</button>
+ <button id="reset">[ REINICIAR ]</button>
+</div>
+<div id="result"></div>
+</div>
+
+<script>
+const game=document.getElementById("game"),canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
+const left=[...document.querySelectorAll("#leftColumn .item")];
+const right=[...document.querySelectorAll("#rightColumn .item")];
+let selected=null,connections=[];
+
+function resize(){
+ const r=game.getBoundingClientRect(),d=devicePixelRatio||1;
+ canvas.width=r.width*d;canvas.height=r.height*d;canvas.style.width=r.width+"px";canvas.style.height=r.height+"px";
+ ctx.setTransform(d,0,0,d,0,0);redraw();
+}
+function center(el){
+ const a=el.getBoundingClientRect(),b=game.getBoundingClientRect();
+ return{x:a.left-b.left+a.width/2,y:a.top-b.top+a.height/2};
+}
+function redraw(){
+ const r=game.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);
+ connections.forEach(c=>{
+  const s=center(c.left),e=center(c.right),m=(s.x+e.x)/2;
+  ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.bezierCurveTo(m,s.y,m,e.y,e.x,e.y);
+  ctx.strokeStyle=c.checked?(c.correct?"#39ff88":"#ff3b5c"):"#00f6ff";
+  ctx.lineWidth=3;ctx.shadowBlur=10;ctx.shadowColor=ctx.strokeStyle;ctx.stroke();ctx.shadowBlur=0;
+ });
+}
+left.forEach(x=>x.onclick=()=>{
+ if(x.classList.contains("correct"))return;
+ left.forEach(y=>y.classList.remove("selected"));x.classList.add("selected");selected=x;
+});
+right.forEach(x=>x.onclick=()=>{
+ if(!selected)return;
+ connections=connections.filter(c=>c.left!==selected&&c.right!==x);
+ connections.push({left:selected,right:x,checked:false,correct:false});
+ left.forEach(y=>y.classList.remove("selected"));selected=null;redraw();
+});
+document.getElementById("check").onclick=()=>{
+ let n=0;
+ left.forEach(x=>x.classList.remove("correct","incorrect"));
+ right.forEach(x=>x.classList.remove("correct","incorrect"));
+ connections.forEach(c=>{
+  c.correct=c.left.dataset.id===c.right.dataset.answer;c.checked=true;
+  c.left.classList.add(c.correct?"correct":"incorrect");c.right.classList.add(c.correct?"correct":"incorrect");
+  if(c.correct)n++;
+ });
+ document.getElementById("result").textContent=`RESULTADO // ${n} / 10 CORRECTAS`;
+ redraw();
+};
+document.getElementById("reset").onclick=()=>{
+ connections=[];selected=null;
+ [...left,...right].forEach(x=>x.classList.remove("selected","correct","incorrect"));
+ document.getElementById("result").textContent="";redraw();
+};
+
+const startScreen=document.getElementById("startScreen");
+const startYes=document.getElementById("startYes");
+const startNo=document.getElementById("startNo");
+
+startYes.onclick=()=>{
+  startScreen.classList.add("hidden");
+  setTimeout(()=>{
+    document.getElementById("game").scrollIntoView({behavior:"smooth",block:"start"});
+  },180);
+};
+
+startNo.onclick=()=>{
+  startNo.textContent="[ ¿SEGURO? ]";
+  setTimeout(()=>{startNo.textContent="[ TODAVÍA NO ]";},1200);
+};
+
+window.addEventListener("resize",resize);resize();
+</script>
+</body>
+</html>
